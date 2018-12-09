@@ -100,12 +100,12 @@ contract Staking is ERCStaking, ERCStakingHistory, TimeHelpers, IsContract {
         require(stakingToken.transfer(msg.sender, _amount), ERROR_TOKEN_TRANSFER);
 
         // process Stake
-        _modifyStakeBalance(msg.sender, _amount, false);
+        uint256 newStake = _modifyStakeBalance(msg.sender, _amount, false);
 
         // Update history
         _updateTotalStaked();
 
-        emit Unstaked(msg.sender, _amount, totalStakedFor(msg.sender), _data);
+        emit Unstaked(msg.sender, _amount, newStake, _data);
     }
 
     /**
@@ -445,15 +445,15 @@ contract Staking is ERCStaking, ERCStakingHistory, TimeHelpers, IsContract {
         require(stakingToken.transferFrom(msg.sender, this, _amount), ERROR_TOKEN_TRANSFER);
 
         // process Stake
-        _modifyStakeBalance(_account, _amount, true);
+        uint256 newStake = _modifyStakeBalance(_account, _amount, true);
 
         // Update history
         _updateTotalStaked();
 
-        emit Staked(_account, _amount, totalStakedFor(_account), _data);
+        emit Staked(_account, _amount, newStake, _data);
     }
 
-    function _modifyStakeBalance(address _account, uint256 _by, bool _increase) internal {
+    function _modifyStakeBalance(address _account, uint256 _by, bool _increase) internal returns (uint256) {
         uint256 currentStake = totalStakedFor(_account);
 
         uint256 newStake;
@@ -464,6 +464,8 @@ contract Staking is ERCStaking, ERCStakingHistory, TimeHelpers, IsContract {
         }
 
         _setStakedFor(_account, newStake);
+
+        return newStake;
     }
 
     function _updateTotalStaked() internal {
